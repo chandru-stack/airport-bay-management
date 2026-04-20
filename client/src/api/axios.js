@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
+console.log('API Base URL:', BASE_URL);
+
 const API = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
 });
 
 API.interceptors.request.use((config) => {
@@ -15,10 +21,8 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only logout on 401 — NOT on 403 or other errors
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      // Don't redirect if already on login page
       if (currentPath !== '/login') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
