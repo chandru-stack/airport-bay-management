@@ -1,4 +1,8 @@
 const { Pool } = require('pg');
+const dns = require('dns');
+
+// Force IPv4 DNS resolution
+dns.setDefaultResultOrder('ipv4first');
 
 let poolConfig;
 
@@ -6,7 +10,6 @@ if (process.env.DATABASE_URL) {
   poolConfig = {
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    family: 4,  // Force IPv4
   };
 } else {
   poolConfig = {
@@ -15,7 +18,6 @@ if (process.env.DATABASE_URL) {
     database: 'airport_bay_management',
     user:     'postgres',
     password: 'Chan2004@',
-    family:   4,
   };
 }
 
