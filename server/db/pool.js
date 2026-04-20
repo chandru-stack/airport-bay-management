@@ -1,19 +1,25 @@
 const { Pool } = require('pg');
 
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-      }
-    : {
-        host:     'localhost',
-        port:     5432,
-        database: 'airport_bay_management',
-        user:     'postgres',
-        password: 'Chan2004@',
-      }
-);
+let poolConfig;
+
+if (process.env.DATABASE_URL) {
+  poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    family: 4,  // Force IPv4
+  };
+} else {
+  poolConfig = {
+    host:     'localhost',
+    port:     5432,
+    database: 'airport_bay_management',
+    user:     'postgres',
+    password: 'Chan2004@',
+    family:   4,
+  };
+}
+
+const pool = new Pool(poolConfig);
 
 pool.connect((err, client, release) => {
   if (err) {
