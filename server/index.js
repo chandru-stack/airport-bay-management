@@ -6,11 +6,19 @@ const { Server } = require('socket.io');
 const app    = express();
 const server = http.createServer(app);
 
+// Allowed origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://airport-bay-management.vercel.app',
+  'https://airport-bay-management-1.onrender.com'
+];
+
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true
   }
 });
 
@@ -18,7 +26,23 @@ const io = new Server(server, {
 app.set('io', io);
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Allow all for now
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,7 +64,10 @@ app.use('/api/notifications', require('./routes/notifications'));
 
 // Health check
 app.get('/', (req, res) => {
-  res.json({ message: '✅ Airport Bay Management API is running', status: 'OK' });
+  res.json({
+    message: '✅ Airport Bay Management API is running',
+    status: 'OK'
+  });
 });
 
 // Socket.io connection handler
@@ -51,7 +78,7 @@ const { startDelayMonitor } = require('./jobs/delayMonitor');
 startDelayMonitor(io);
 
 // Start server
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
